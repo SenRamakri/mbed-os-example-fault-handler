@@ -1,6 +1,5 @@
 #include "mbed.h"
 
-
 typedef enum _ExceptType {
     USAGE_FAULT_ZERO_DIV,
     USAGE_FAULT_INVALID_THUMB_BIT,
@@ -20,12 +19,11 @@ void test_func(int i);
 typedef void (*test_func_ptr_t)(int i);
 test_func_ptr_t test_func_ptr;
 
-
 // main() runs in its own thread in the OS
 int main() {
   
     printf("\nMbed-OS exception handler test\n");
-    exception_generator(BUS_FAULT_INVALID_ACCESS);
+    exception_generator(BUS_FAULT_UNALIGNED_ACCESS);
     printf("Forcing exception failed\n");
 }
 
@@ -55,6 +53,17 @@ void exception_generator(ExceptType except_type)
     }
 }
 
+void generate_bus_fault_unaligned_access()
+{
+    SCB->CCR |= SCB_CCR_UNALIGN_TRP_Msk;
+    uint32_t inv_addr = 0xAAA3;
+    uint32_t val = *(uint32_t *)inv_addr;
+    
+    printf("\nval= %X", val);
+    
+    return;
+}
+
 void generate_usage_fault_zero_div()
 {
     SCB->CCR |= SCB_CCR_DIV_0_TRP_Msk;
@@ -82,17 +91,6 @@ void test_func(int i)
 void generate_bus_fault_inv_access()
 {
     uint32_t inv_addr = 0xFFFFFFF0;
-    uint32_t val = *(uint32_t *)inv_addr;
-    
-    printf("\nval= %X", val);
-    
-    return;
-}
-
-void generate_bus_fault_unaligned_access()
-{
-    SCB->CCR |= SCB_CCR_UNALIGN_TRP_Msk;
-    uint32_t inv_addr = 0xAAA3;
     uint32_t val = *(uint32_t *)inv_addr;
     
     printf("\nval= %X", val);
